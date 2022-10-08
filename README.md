@@ -1,1 +1,1 @@
-# st 0.8.4 (https://st.suckless.org/)
+# st 0.9 (https://st.suckless.org/)
