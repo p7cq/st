@@ -252,6 +252,8 @@ static char *opt_line  = NULL;
 static char *opt_name  = NULL;
 static char *opt_title = NULL;
 
+static int cursorblinks = 0;
+
 static uint buttons; /* bit field of pressed buttons */
 
 void
@@ -1563,6 +1565,8 @@ xdrawcursor(int cx, int cy, Glyph g, int ox, int oy, Glyph og)
 			/* FALLTHROUGH */
 		case 0: /* Blinking Block */
 		case 1: /* Blinking Block (Default) */
+			if (IS_SET(MODE_BLINK))
+				break;
 		case 2: /* Steady Block */
 			xdrawglyph(g, cx, cy);
 			break;
@@ -1740,6 +1744,7 @@ xsetcursor(int cursor)
 	if (!BETWEEN(cursor, 0, 7)) /* 7: st extension */
 		return 1;
 	win.cursor = cursor;
+	cursorblinks = win.cursor == 1; /* only for blinking block (default) cursor style */
 	return 0;
 }
 
@@ -1993,7 +1998,7 @@ run(void)
 
 		/* idle detected or maxlatency exhausted -> draw */
 		timeout = -1;
-		if (blinktimeout && tattrset(ATTR_BLINK)) {
+		if (blinktimeout && (cursorblinks || tattrset(ATTR_BLINK))) {
 			timeout = blinktimeout - TIMEDIFF(now, lastblink);
 			if (timeout <= 0) {
 				if (-timeout > blinktimeout) /* start visible */
