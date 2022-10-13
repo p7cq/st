@@ -114,17 +114,24 @@ static const char *colorname[] = {
 	[13] = "#d3869b", /* magenta dark: #d3869b, light: #b16286 */
 	[14] = "#8ec07c", /* cyan    dark: #8ec07c, light: #689d6a */
 	[15] = "#ebdbb2", /* white   dark: #ebdbb2, light: #3c3836 */
-};
 
+	[255] = 0,
+
+	/* more colors can be added after 255 to use with DefaultXX */
+	"#ebdbb2", /* defaultfg  dark: #ebdbb2, light: #3c3836 */
+	"#282828", /* defaultbg  dark: #282828, light: #fbf1c7 */
+	"#ebdbb2", /* defaultcs  dark: #ebdbb2, light: #3c3836 */
+	"#282828", /* defaultrcs dark: #282828, light: #fbf1c7 */
+};
 
 /*
  * Default colors (colorname index)
  * foreground, background, cursor, reverse cursor
  */
-unsigned int defaultfg = 15;
-unsigned int defaultbg = 0;
-unsigned int defaultcs = 3;
-static unsigned int defaultrcs = 3;
+unsigned int defaultfg = 256;
+unsigned int defaultbg = 257;
+unsigned int defaultcs = 258;
+unsigned int defaultrcs = 259;
 
 /*
  * Default shape of cursor
