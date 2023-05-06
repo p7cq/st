@@ -1817,7 +1817,7 @@ void
 csihandle(void)
 {
 	char buf[40];
-	int n, x;
+	int len;
 
 	switch (csiescseq.mode[0]) {
 	default:
@@ -1926,19 +1926,8 @@ csihandle(void)
 			tclearregion(0, term.c.y, term.c.x, term.c.y, 1);
 			break;
 		case 2: /* all */
-			if (IS_SET(MODE_ALTSCREEN)) {
 				tclearregion(0, 0, term.col-1, term.row-1, 1);
 				break;
-			}
-			/* vte does this:
-			tscrollup(0, term.row-1, term.row, SCROLL_SAVEHIST); */
-
-			/* alacritty does this: */
-			for (n = term.row-1; n >= 0 && tlinelen(term.line[n]) == 0; n--);
-			if (n >= 0)
-				tscrollup(0, term.row-1, n+1, SCROLL_SAVEHIST);
-			tscrollup(0, term.row-1, term.row-n-1, SCROLL_NOSAVEHIST);
-			break;
 		default:
 			goto unknown;
 		}
@@ -1977,11 +1966,9 @@ csihandle(void)
 		tdeleteline(csiescseq.arg[0]);
 		break;
 	case 'X': /* ECH -- Erase <n> char */
-		if (csiescseq.arg[0] < 0)
-			return;
 		DEFAULT(csiescseq.arg[0], 1);
-		x = MIN(term.c.x + csiescseq.arg[0], term.col) - 1;
-		tclearregion(term.c.x, term.c.y, x, term.c.y, 1);
+		tclearregion(term.c.x, term.c.y,
+                        term.c.x + csiescseq.arg[0] - 1, term.c.y, 1);
 		break;
 	case 'P': /* DCH -- Delete <n> char */
 		DEFAULT(csiescseq.arg[0], 1);
@@ -2001,11 +1988,18 @@ csihandle(void)
 	case 'm': /* SGR -- Terminal attribute (color) */
 		tsetattr(csiescseq.arg, csiescseq.narg);
 		break;
-	case 'n': /* DSR – Device Status Report (cursor position) */
-		if (csiescseq.arg[0] == 6) {
-			n = snprintf(buf, sizeof(buf), "\033[%i;%iR",
-					term.c.y+1, term.c.x+1);
-			ttywrite(buf, n, 0);
+	case 'n': /* DSR – Device Status Report */
+		switch (csiescseq.arg[0]) {
+            case 5: /* Status Report "OK" `0n` */
+                    ttywrite("\033[0n", sizeof("\033[0n") - 1, 0);
+                    break;
+            case 6: /* Report Cursor Position (CPR) "<row>;<column>R" */
+			        len = snprintf(buf, sizeof(buf), "\033[%i;%iR",
+					             term.c.y+1, term.c.x+1);
+			        ttywrite(buf, len, 0);
+                    break;
+            default:
+                    goto unknown;
 		}
 		break;
 	case 'r': /* DECSTBM -- Set Scrolling Region */
